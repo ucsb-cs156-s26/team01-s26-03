@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
@@ -108,6 +109,10 @@ public class CurrentUserServiceImpl extends CurrentUserService {
   public User getUser() {
     SecurityContext securityContext = SecurityContextHolder.getContext();
     Authentication authentication = securityContext.getAuthentication();
+
+    if (authentication instanceof AnonymousAuthenticationToken) {
+      return null;
+    }
 
     if (authentication instanceof OAuth2AuthenticationToken) {
       return getOAuth2AuthenticatedUser(securityContext, authentication);

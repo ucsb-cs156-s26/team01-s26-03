@@ -16,6 +16,8 @@ import io.swagger.v3.oas.annotations.servers.Server;
                 """
     <p><a href='/'>Home Page</a></p>
     <p><a href='/h2-console'>H2 Console (only on localhost)</a></p>
+    <p><a href='/oauth2/authorization/google'>Login</a></p>
+    <p><a href='/logout'>Logout</a></p>
     """),
     servers = @Server(url = "/"))
 class OpenAPIConfig {}

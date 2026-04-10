@@ -3,6 +3,7 @@ package edu.ucsb.cs156.example.services;
 import edu.ucsb.cs156.example.entities.User;
 import edu.ucsb.cs156.example.models.CurrentUser;
 import java.util.Collection;
+import java.util.List;
 import org.springframework.security.core.GrantedAuthority;
 
 /**
@@ -40,5 +41,16 @@ public abstract class CurrentUserService {
    */
   public final boolean isLoggedIn() {
     return getUser() != null;
+  }
+
+  /**
+   * This method returns the roles of the current user as a sorted list of strings.
+   *
+   * @return a collection of roles
+   */
+  public List<String> getRolesSorted() {
+    Collection<? extends GrantedAuthority> authorities = getRoles();
+    List<String> roles = authorities.stream().map(GrantedAuthority::getAuthority).sorted().toList();
+    return roles;
   }
 }

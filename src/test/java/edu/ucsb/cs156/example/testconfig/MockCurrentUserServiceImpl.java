@@ -2,6 +2,7 @@ package edu.ucsb.cs156.example.testconfig;
 
 import edu.ucsb.cs156.example.entities.User;
 import edu.ucsb.cs156.example.services.CurrentUserServiceImpl;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -62,6 +63,10 @@ public class MockCurrentUserServiceImpl extends CurrentUserServiceImpl {
   public User getUser() {
     SecurityContext securityContext = SecurityContextHolder.getContext();
     Authentication authentication = securityContext.getAuthentication();
+
+    if (authentication instanceof AnonymousAuthenticationToken) {
+      return null;
+    }
 
     if (!(authentication instanceof OAuth2AuthenticationToken)) {
       return getMockUser(securityContext, authentication);
