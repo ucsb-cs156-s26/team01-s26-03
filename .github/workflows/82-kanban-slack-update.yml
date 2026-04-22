@@ -207,44 +207,54 @@ jobs:
 
           with open('project_data.json', 'r') as f:
               data = json.load(f)
+          debug = False
 
-          #print(f"Project Data JSON: {json.dumps(data, indent=2)}")
+          if debug:
+              print(f"Project Data JSON: {json.dumps(data, indent=2)}")
           issue_counts = {}
           columns = [c.strip() for c in os.environ.get('columns', '').split(',')]
 
           for item in data['data']['node']['items']['nodes']:
-              #print(f"Processing item: {item['id']}")
+              if debug:
+                print(f"Processing item: {item['id']}")
               column_field = next(
                   (n for n in item['fieldValues']['nodes'] if n.get('name') in columns),
                   None
               )
               if column_field is not None:
-                  print(f"Found column field: {json.dumps(column_field, indent=2)}")
+                  if debug:
+                    print(f"Found column field: {json.dumps(column_field, indent=2)}")
                   column = column_field.get('name')
-                  #print(f"Processing column: {column}")
+                  if debug:
+                    print(f"Processing column: {column}")
                   if column is not None:
                       assignees = [n['login'] for n in item['content'].get('assignees', {}).get('nodes', [])]
                       if not assignees:
                           assignees = ['UNASSIGNED']
                       for assignee in assignees:
-                          #print(f"Processing assignee: {assignee}")
+                          if debug:
+                            print(f"Processing assignee: {assignee}")
                           if column not in issue_counts:
                               issue_counts[column] = {}
                           if assignee not in issue_counts[column]:
                               issue_counts[column][assignee] = 0
                           issue_counts[column][assignee] += 1
               else:
-                  #print(f"No column field found for item: {item['id']}")
+                  if debug:
+                      print(f"No column field found for item: {item['id']}")
                   pass
 
           for column in issue_counts:
-              #print(f"Column: {column}")
+              if debug:
+                  print(f"Column: {column}")
               for assignee in issue_counts[column]:
-                  #print(f"  Assignee: {assignee}, Count: {issue_counts[column][assignee]}")
+                  if debug:
+                      print(f"  Assignee: {assignee}, Count: {issue_counts[column][assignee]}")
                   pass
 
           issue_counts_json = json.dumps(issue_counts, indent=2)
-          #print(f"Issue Counts JSON: {issue_counts_json}")
+          if debug:
+              print(f"Issue Counts JSON: {issue_counts_json}")
 
           with open('issue_counts.json', 'w') as f:
               f.write(issue_counts_json)
@@ -252,7 +262,10 @@ jobs:
           with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
               f.write(f"issue_counts={issue_counts_json}\n")
 
-          print("Issue count process completed")
+          print("Issue count process completed")      
+      - name: Display issue_counts.json for debugging
+        run: |
+          echo "Contents of issue_counts.json:"
           cat issue_counts.json
       - name: Upload issue counts
         uses: actions/upload-artifact@v4
