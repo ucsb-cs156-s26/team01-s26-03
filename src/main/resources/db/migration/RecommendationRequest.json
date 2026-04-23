@@ -1,0 +1,11 @@
+{
+  "name": "RecommendationRequest",
+  "fields": [
+    { "name": "requesterEmail", "type": "String" },
+    { "name": "professorEmail", "type": "String" },
+    { "name": "explanation", "type": "String" },
+    { "name": "dateRequested", "type": "LocalDateTime" },
+    { "name": "dateNeeded", "type": "LocalDateTime" },
+    { "name": "done", "type": "Boolean" }
+  ]
+}
