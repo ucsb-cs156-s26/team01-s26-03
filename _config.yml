@@ -23,4 +23,4 @@ repo_name: "TBD"
 repo: ucsb-cs156-s26/team01-s26-03
 owner: ucsb-cs156-s26
 repo_name: team01-s26-03
-pull_requests: [{"author":{"id":"MDQ6VXNlcjUzOTgxMDM3","is_bot":false,"login":"Hrithik-M","name":""},"headRefName":"hrithik-recommendation-request-db","number":43,"title":"Created Database table for RecommendatioRequest","url":"https://github.com/ucsb-cs156-s26/team01-s26-03/pull/43"}]
+pull_requests: [{"author":{"id":"U_kgDOCNn2aA","is_bot":false,"login":"alexandrugherghescu01","name":""},"headRefName":"alexandrugherghescu01-26","number":44,"title":"Add MenuItemReview table","url":"https://github.com/ucsb-cs156-s26/team01-s26-03/pull/44"},{"author":{"id":"MDQ6VXNlcjUzOTgxMDM3","is_bot":false,"login":"Hrithik-M","name":""},"headRefName":"hrithik-recommendation-request-db","number":43,"title":"Created Database table for RecommendatioRequest","url":"https://github.com/ucsb-cs156-s26/team01-s26-03/pull/43"}]
