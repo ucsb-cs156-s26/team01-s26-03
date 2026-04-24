@@ -274,4 +274,53 @@ public class RecommendationRequestControllerTests extends ControllerTestCase {
     Map<String, Object> json = responseToJson(response);
     assertEquals("RecommendationRequest with id 67 not found", json.get("message"));
   }
+
+  // Tests for DELETE
+
+  @WithMockUser(roles = {"ADMIN", "USER"})
+  @Test
+  public void admin_can_delete_a_request() throws Exception {
+    LocalDateTime dr = LocalDateTime.parse("2026-04-20T00:00:00");
+    LocalDateTime dn = LocalDateTime.parse("2026-05-20T00:00:00");
+
+    RecommendationRequest req =
+        RecommendationRequest.builder()
+            .requesterEmail("student@ucsb.edu")
+            .professorEmail("prof@ucsb.edu")
+            .explanation("Grad School")
+            .dateRequested(dr)
+            .dateNeeded(dn)
+            .done(false)
+            .build();
+
+    when(recommendationRequestRepository.findById(eq(15L))).thenReturn(Optional.of(req));
+
+    MvcResult response =
+        mockMvc
+            .perform(delete("/api/RecommendationRequest?id=15").with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(recommendationRequestRepository, times(1)).findById(15L);
+    verify(recommendationRequestRepository, times(1)).delete(req);
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("RecommendationRequest with id 15 deleted", json.get("message"));
+  }
+
+  @WithMockUser(roles = {"ADMIN", "USER"})
+  @Test
+  public void admin_tries_to_delete_non_existent_request_and_gets_right_error_message()
+      throws Exception {
+    when(recommendationRequestRepository.findById(eq(15L))).thenReturn(Optional.empty());
+
+    MvcResult response =
+        mockMvc
+            .perform(delete("/api/RecommendationRequest?id=15").with(csrf()))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    verify(recommendationRequestRepository, times(1)).findById(15L);
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("RecommendationRequest with id 15 not found", json.get("message"));
+  }
 }
