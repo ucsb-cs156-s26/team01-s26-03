@@ -6,11 +6,14 @@ import edu.ucsb.cs156.example.repositories.MenuItemReviewRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -61,5 +64,27 @@ public class MenuItemReviewController extends ApiController {
     review.setComments(comments);
 
     return menuItemReviewRepository.save(review);
+  }
+
+  /** Update a single MenuItemReview */
+  @Operation(summary = "Update a single menu item review")
+  @PreAuthorize("hasRole('ROLE_ADMIN')")
+  @PutMapping("")
+  public MenuItemReview updateMenuItemReview(
+      @Parameter(name = "id") @RequestParam Long id, @RequestBody @Valid MenuItemReview incoming) {
+
+    MenuItemReview review =
+        menuItemReviewRepository
+            .findById(id)
+            .orElseThrow(() -> new EntityNotFoundException(MenuItemReview.class, id));
+
+    review.setItemId(incoming.getItemId());
+    review.setReviewerEmail(incoming.getReviewerEmail());
+    review.setStars(incoming.getStars());
+    review.setComments(incoming.getComments());
+
+    menuItemReviewRepository.save(review);
+
+    return review;
   }
 }
