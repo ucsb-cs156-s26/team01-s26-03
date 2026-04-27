@@ -82,6 +82,45 @@ public class MenuItemReviewControllerTests extends ControllerTestCase {
         .andExpect(jsonPath("$[1].comments").value("Pretty good"));
   }
 
+  // Tests for GET /api/MenuItemReview?id=...
+
+  @Test
+  public void logged_out_users_cannot_get_by_id() throws Exception {
+    mockMvc.perform(get("/api/MenuItemReview").param("id", "1")).andExpect(status().is(403));
+  }
+
+  @WithMockUser(roles = {"USER"})
+  @Test
+  public void logged_in_user_can_get_by_id_when_id_exists() throws Exception {
+    MenuItemReview review =
+        MenuItemReview.builder()
+            .id(1)
+            .itemId("burger1")
+            .reviewerEmail("test@ucsb.edu")
+            .stars(5)
+            .comments("Amazing!")
+            .build();
+
+    when(menuItemReviewRepository.findById(1L)).thenReturn(java.util.Optional.of(review));
+
+    mockMvc
+        .perform(get("/api/MenuItemReview").param("id", "1"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.id").value(1))
+        .andExpect(jsonPath("$.itemId").value("burger1"))
+        .andExpect(jsonPath("$.reviewerEmail").value("test@ucsb.edu"))
+        .andExpect(jsonPath("$.stars").value(5))
+        .andExpect(jsonPath("$.comments").value("Amazing!"));
+  }
+
+  @WithMockUser(roles = {"USER"})
+  @Test
+  public void logged_in_user_gets_404_when_id_does_not_exist() throws Exception {
+    when(menuItemReviewRepository.findById(999L)).thenReturn(java.util.Optional.empty());
+
+    mockMvc.perform(get("/api/MenuItemReview").param("id", "999")).andExpect(status().isNotFound());
+  }
+
   // Tests for POST /api/MenuItemReview/post
 
   @Test
