@@ -213,6 +213,7 @@ public class MenuItemReviewControllerTests extends ControllerTestCase {
 
     mockMvc
         .perform(delete("/api/MenuItemReview").param("id", "999").with(csrf()))
-        .andExpect(status().isNotFound());
+        .andExpect(status().isNotFound())
+        .andExpect(content().string(org.hamcrest.Matchers.containsString("not found")));
   }
 }
