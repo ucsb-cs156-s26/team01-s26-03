@@ -1,6 +1,7 @@
 package edu.ucsb.cs156.example.controllers;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -213,6 +214,32 @@ public class MenuItemReviewControllerTests extends ControllerTestCase {
 
     mockMvc
         .perform(delete("/api/MenuItemReview").param("id", "999").with(csrf()))
+        .andExpect(status().isNotFound())
+        .andExpect(content().string(org.hamcrest.Matchers.containsString("not found")));
+  }
+
+  @WithMockUser(roles = {"ADMIN"})
+  @Test
+  public void admin_cannot_edit_review_that_does_not_exist() throws Exception {
+    MenuItemReview updatedReview =
+        MenuItemReview.builder()
+            .itemId("burger2")
+            .reviewerEmail("updated@ucsb.edu")
+            .stars(4)
+            .comments("Updated review")
+            .build();
+
+    String requestBody = new ObjectMapper().writeValueAsString(updatedReview);
+
+    when(menuItemReviewRepository.findById(eq(999L))).thenReturn(java.util.Optional.empty());
+
+    mockMvc
+        .perform(
+            put("/api/MenuItemReview")
+                .param("id", "999")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody)
+                .with(csrf()))
         .andExpect(status().isNotFound())
         .andExpect(content().string(org.hamcrest.Matchers.containsString("not found")));
   }
