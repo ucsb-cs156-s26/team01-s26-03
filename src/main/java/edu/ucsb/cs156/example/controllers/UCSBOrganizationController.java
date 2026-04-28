@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -101,5 +102,18 @@ public class UCSBOrganizationController extends ApiController {
     ucsbOrganizationRepository.save(organization);
 
     return organization;
+  }
+
+  @Operation(summary = "Delete a UCSB organization")
+  @PreAuthorize("hasRole('ROLE_ADMIN')")
+  @DeleteMapping("")
+  public Object deleteOrganization(@Parameter(name = "id") @RequestParam String id) {
+    UCSBOrganization organization =
+        ucsbOrganizationRepository
+            .findById(id)
+            .orElseThrow(() -> new EntityNotFoundException(UCSBOrganization.class, id));
+
+    ucsbOrganizationRepository.delete(organization);
+    return genericMessage("record %s deleted".formatted(id));
   }
 }
