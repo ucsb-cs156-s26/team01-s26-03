@@ -1,10 +1,12 @@
 package edu.ucsb.cs156.example.controllers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -121,6 +123,21 @@ public class UCSBOrganizationControllerTests extends ControllerTestCase {
         .andExpect(status().is(403));
   }
 
+  @Test
+  public void logged_out_users_cannot_delete() throws Exception {
+    mockMvc
+        .perform(delete("/api/UCSBOrganization").param("id", "ATHLETICS").with(csrf()))
+        .andExpect(status().is(403));
+  }
+
+  @WithMockUser(roles = {"USER"})
+  @Test
+  public void logged_in_regular_users_cannot_delete() throws Exception {
+    mockMvc
+        .perform(delete("/api/UCSBOrganization").param("id", "ATHLETICS").with(csrf()))
+        .andExpect(status().is(403));
+  }
+
   @WithMockUser(roles = {"USER"})
   @Test
   public void logged_in_user_can_get_all_organizations() throws Exception {
@@ -187,6 +204,49 @@ public class UCSBOrganizationControllerTests extends ControllerTestCase {
     MvcResult response =
         mockMvc
             .perform(get("/api/UCSBOrganization").param("id", "NOTREAL"))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    verify(ucsbOrganizationRepository, times(1)).findById("NOTREAL");
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("EntityNotFoundException", json.get("type"));
+    assertEquals("UCSBOrganization with id NOTREAL not found", json.get("message"));
+  }
+
+  @WithMockUser(roles = {"ADMIN", "USER"})
+  @Test
+  public void admin_can_delete_an_existing_organization() throws Exception {
+    UCSBOrganization athletics =
+        UCSBOrganization.builder()
+            .orgCode("ATHLETICS")
+            .orgTranslationShort("Athletics")
+            .orgTranslation("Intercollegiate Athletics")
+            .inactive(true)
+            .build();
+
+    when(ucsbOrganizationRepository.findById("ATHLETICS")).thenReturn(Optional.of(athletics));
+
+    MvcResult response =
+        mockMvc
+            .perform(delete("/api/UCSBOrganization").param("id", "ATHLETICS").with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(ucsbOrganizationRepository, times(1)).findById("ATHLETICS");
+    verify(ucsbOrganizationRepository, times(1)).delete(any());
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("record ATHLETICS deleted", json.get("message"));
+  }
+
+  @WithMockUser(roles = {"ADMIN", "USER"})
+  @Test
+  public void admin_tries_to_delete_non_existant_organization_and_gets_right_error_message()
+      throws Exception {
+    when(ucsbOrganizationRepository.findById("NOTREAL")).thenReturn(Optional.empty());
+
+    MvcResult response =
+        mockMvc
+            .perform(delete("/api/UCSBOrganization").param("id", "NOTREAL").with(csrf()))
             .andExpect(status().isNotFound())
             .andReturn();
 
