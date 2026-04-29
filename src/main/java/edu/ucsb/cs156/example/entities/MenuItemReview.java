@@ -4,6 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,8 +21,15 @@ public class MenuItemReview {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private long id;
 
-  private String itemId;
+  // MUST be Long (not String)
+  private Long itemId;
+
   private String reviewerEmail;
+
   private int stars;
+
+  // REQUIRED field (you were missing this)
+  private LocalDateTime dateReviewed;
+
   private String comments;
 }

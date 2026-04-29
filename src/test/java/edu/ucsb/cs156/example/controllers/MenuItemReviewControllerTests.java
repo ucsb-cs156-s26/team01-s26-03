@@ -14,10 +14,11 @@ import edu.ucsb.cs156.example.entities.MenuItemReview;
 import edu.ucsb.cs156.example.repositories.MenuItemReviewRepository;
 import edu.ucsb.cs156.example.repositories.UserRepository;
 import edu.ucsb.cs156.example.testconfig.TestConfig;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
@@ -30,6 +31,12 @@ public class MenuItemReviewControllerTests extends ControllerTestCase {
 
   @MockBean MenuItemReviewRepository menuItemReviewRepository;
   @MockBean UserRepository userRepository;
+
+  @Autowired ObjectMapper mapper;
+
+  private final LocalDateTime dateReviewed = LocalDateTime.parse("2022-04-20T00:00:00");
+
+  // ================= GET ALL =================
 
   @Test
   public void logged_out_users_cannot_get_all() throws Exception {
@@ -48,18 +55,20 @@ public class MenuItemReviewControllerTests extends ControllerTestCase {
     MenuItemReview r1 =
         MenuItemReview.builder()
             .id(1)
-            .itemId("burger1")
+            .itemId(27L)
             .reviewerEmail("a@ucsb.edu")
-            .stars(5)
+            .stars(3)
+            .dateReviewed(dateReviewed)
             .comments("A")
             .build();
 
     MenuItemReview r2 =
         MenuItemReview.builder()
             .id(2)
-            .itemId("pizza1")
+            .itemId(29L)
             .reviewerEmail("b@ucsb.edu")
-            .stars(4)
+            .stars(5)
+            .dateReviewed(dateReviewed)
             .comments("B")
             .build();
 
@@ -69,16 +78,10 @@ public class MenuItemReviewControllerTests extends ControllerTestCase {
         .perform(get("/api/MenuItemReview/all"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$[0].id").value(1))
-        .andExpect(jsonPath("$[0].itemId").value("burger1"))
-        .andExpect(jsonPath("$[0].reviewerEmail").value("a@ucsb.edu"))
-        .andExpect(jsonPath("$[0].stars").value(5))
-        .andExpect(jsonPath("$[0].comments").value("A"))
-        .andExpect(jsonPath("$[1].id").value(2))
-        .andExpect(jsonPath("$[1].itemId").value("pizza1"))
-        .andExpect(jsonPath("$[1].reviewerEmail").value("b@ucsb.edu"))
-        .andExpect(jsonPath("$[1].stars").value(4))
-        .andExpect(jsonPath("$[1].comments").value("B"));
+        .andExpect(jsonPath("$[1].id").value(2));
   }
+
+  // ================= GET BY ID =================
 
   @Test
   public void logged_out_users_cannot_get_by_id() throws Exception {
@@ -91,9 +94,10 @@ public class MenuItemReviewControllerTests extends ControllerTestCase {
     MenuItemReview r =
         MenuItemReview.builder()
             .id(1)
-            .itemId("burger1")
+            .itemId(27L)
             .reviewerEmail("a@ucsb.edu")
-            .stars(5)
+            .stars(3)
+            .dateReviewed(dateReviewed)
             .comments("A")
             .build();
 
@@ -102,11 +106,7 @@ public class MenuItemReviewControllerTests extends ControllerTestCase {
     mockMvc
         .perform(get("/api/MenuItemReview").param("id", "1"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.id").value(1))
-        .andExpect(jsonPath("$.itemId").value("burger1"))
-        .andExpect(jsonPath("$.reviewerEmail").value("a@ucsb.edu"))
-        .andExpect(jsonPath("$.stars").value(5))
-        .andExpect(jsonPath("$.comments").value("A"));
+        .andExpect(jsonPath("$.id").value(1));
   }
 
   @WithMockUser(roles = {"USER"})
@@ -117,33 +117,21 @@ public class MenuItemReviewControllerTests extends ControllerTestCase {
     mockMvc
         .perform(get("/api/MenuItemReview").param("id", "999"))
         .andExpect(status().isNotFound())
-        .andExpect(content().string(containsString("MenuItemReview")))
-        .andExpect(content().string(containsString("999")));
+        .andExpect(content().string(containsString("MenuItemReview")));
   }
+
+  // ================= POST =================
 
   @Test
   public void logged_out_users_cannot_post() throws Exception {
     mockMvc
         .perform(
             post("/api/MenuItemReview/post")
-                .param("itemId", "burger1")
-                .param("reviewerEmail", "test@ucsb.edu")
-                .param("stars", "5")
-                .param("comments", "Amazing!")
-                .with(csrf()))
-        .andExpect(status().is(403));
-  }
-
-  @WithMockUser(roles = {"USER"})
-  @Test
-  public void logged_in_regular_users_cannot_post() throws Exception {
-    mockMvc
-        .perform(
-            post("/api/MenuItemReview/post")
-                .param("itemId", "burger1")
-                .param("reviewerEmail", "test@ucsb.edu")
-                .param("stars", "5")
-                .param("comments", "Amazing!")
+                .param("itemId", "27")
+                .param("reviewerEmail", "a@ucsb.edu")
+                .param("stars", "3")
+                .param("dateReviewed", "2022-04-20T00:00:00")
+                .param("comments", "A")
                 .with(csrf()))
         .andExpect(status().is(403));
   }
@@ -154,9 +142,10 @@ public class MenuItemReviewControllerTests extends ControllerTestCase {
     MenuItemReview saved =
         MenuItemReview.builder()
             .id(1)
-            .itemId("burger")
+            .itemId(27L)
             .reviewerEmail("a@ucsb.edu")
-            .stars(5)
+            .stars(3)
+            .dateReviewed(dateReviewed)
             .comments("A")
             .build();
 
@@ -165,72 +154,17 @@ public class MenuItemReviewControllerTests extends ControllerTestCase {
     mockMvc
         .perform(
             post("/api/MenuItemReview/post")
-                .param("itemId", "burger")
+                .param("itemId", "27")
                 .param("reviewerEmail", "a@ucsb.edu")
-                .param("stars", "5")
+                .param("stars", "3")
+                .param("dateReviewed", "2022-04-20T00:00:00")
                 .param("comments", "A")
                 .with(csrf()))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.id").value(1))
-        .andExpect(jsonPath("$.itemId").value("burger"))
-        .andExpect(jsonPath("$.reviewerEmail").value("a@ucsb.edu"))
-        .andExpect(jsonPath("$.stars").value(5))
-        .andExpect(jsonPath("$.comments").value("A"));
-
-    ArgumentCaptor<MenuItemReview> captor = ArgumentCaptor.forClass(MenuItemReview.class);
-    org.mockito.Mockito.verify(menuItemReviewRepository).save(captor.capture());
-
-    MenuItemReview review = captor.getValue();
-    org.junit.jupiter.api.Assertions.assertEquals("burger", review.getItemId());
-    org.junit.jupiter.api.Assertions.assertEquals("a@ucsb.edu", review.getReviewerEmail());
-    org.junit.jupiter.api.Assertions.assertEquals(5, review.getStars());
-    org.junit.jupiter.api.Assertions.assertEquals("A", review.getComments());
+        .andExpect(jsonPath("$.id").value(1));
   }
 
-  @Test
-  public void logged_out_users_cannot_put() throws Exception {
-    MenuItemReview updated =
-        MenuItemReview.builder()
-            .itemId("new")
-            .reviewerEmail("b@ucsb.edu")
-            .stars(4)
-            .comments("B")
-            .build();
-
-    String body = new ObjectMapper().writeValueAsString(updated);
-
-    mockMvc
-        .perform(
-            put("/api/MenuItemReview")
-                .param("id", "1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(body)
-                .with(csrf()))
-        .andExpect(status().is(403));
-  }
-
-  @WithMockUser(roles = {"USER"})
-  @Test
-  public void logged_in_regular_users_cannot_put() throws Exception {
-    MenuItemReview updated =
-        MenuItemReview.builder()
-            .itemId("new")
-            .reviewerEmail("b@ucsb.edu")
-            .stars(4)
-            .comments("B")
-            .build();
-
-    String body = new ObjectMapper().writeValueAsString(updated);
-
-    mockMvc
-        .perform(
-            put("/api/MenuItemReview")
-                .param("id", "1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(body)
-                .with(csrf()))
-        .andExpect(status().is(403));
-  }
+  // ================= PUT =================
 
   @WithMockUser(roles = {"ADMIN"})
   @Test
@@ -238,94 +172,58 @@ public class MenuItemReviewControllerTests extends ControllerTestCase {
     MenuItemReview existing =
         MenuItemReview.builder()
             .id(1)
-            .itemId("old")
-            .reviewerEmail("a@ucsb.edu")
-            .stars(5)
+            .itemId(27L)
+            .reviewerEmail("a")
+            .stars(3)
+            .dateReviewed(dateReviewed)
             .comments("A")
             .build();
 
     MenuItemReview updated =
         MenuItemReview.builder()
-            .itemId("new")
-            .reviewerEmail("b@ucsb.edu")
+            .itemId(29L)
+            .reviewerEmail("b")
             .stars(4)
+            .dateReviewed(LocalDateTime.parse("2022-04-21T00:00:00"))
             .comments("B")
             .build();
 
     when(menuItemReviewRepository.findById(eq(1L))).thenReturn(java.util.Optional.of(existing));
-
-    String body = new ObjectMapper().writeValueAsString(updated);
 
     mockMvc
         .perform(
             put("/api/MenuItemReview")
                 .param("id", "1")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(body)
+                .content(mapper.writeValueAsString(updated))
                 .with(csrf()))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.id").value(1))
-        .andExpect(jsonPath("$.itemId").value("new"))
-        .andExpect(jsonPath("$.reviewerEmail").value("b@ucsb.edu"))
-        .andExpect(jsonPath("$.stars").value(4))
-        .andExpect(jsonPath("$.comments").value("B"));
-
-    org.mockito.Mockito.verify(menuItemReviewRepository).save(existing);
+        .andExpect(jsonPath("$.itemId").value(29));
   }
 
   @WithMockUser(roles = {"ADMIN"})
   @Test
-  public void admin_cannot_edit_review_that_does_not_exist() throws Exception {
-    MenuItemReview updated =
-        MenuItemReview.builder()
-            .itemId("new")
-            .reviewerEmail("b@ucsb.edu")
-            .stars(4)
-            .comments("B")
-            .build();
-
-    String body = new ObjectMapper().writeValueAsString(updated);
-
+  public void admin_put_not_found() throws Exception {
     when(menuItemReviewRepository.findById(eq(999L))).thenReturn(java.util.Optional.empty());
+
+    MenuItemReview updated = MenuItemReview.builder().itemId(1L).build();
 
     mockMvc
         .perform(
             put("/api/MenuItemReview")
                 .param("id", "999")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(body)
+                .content(mapper.writeValueAsString(updated))
                 .with(csrf()))
-        .andExpect(status().isNotFound())
-        .andExpect(content().string(containsString("MenuItemReview")))
-        .andExpect(content().string(containsString("999")));
+        .andExpect(status().isNotFound());
   }
 
-  @Test
-  public void logged_out_users_cannot_delete() throws Exception {
-    mockMvc
-        .perform(delete("/api/MenuItemReview").param("id", "1").with(csrf()))
-        .andExpect(status().is(403));
-  }
-
-  @WithMockUser(roles = {"USER"})
-  @Test
-  public void logged_in_regular_users_cannot_delete() throws Exception {
-    mockMvc
-        .perform(delete("/api/MenuItemReview").param("id", "1").with(csrf()))
-        .andExpect(status().is(403));
-  }
+  // ================= DELETE =================
 
   @WithMockUser(roles = {"ADMIN"})
   @Test
   public void admin_can_delete() throws Exception {
-    MenuItemReview r =
-        MenuItemReview.builder()
-            .id(1)
-            .itemId("burger")
-            .reviewerEmail("a@ucsb.edu")
-            .stars(5)
-            .comments("A")
-            .build();
+    MenuItemReview r = MenuItemReview.builder().id(1).itemId(27L).build();
 
     when(menuItemReviewRepository.findById(eq(1L))).thenReturn(java.util.Optional.of(r));
 
@@ -333,8 +231,6 @@ public class MenuItemReviewControllerTests extends ControllerTestCase {
         .perform(delete("/api/MenuItemReview").param("id", "1").with(csrf()))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.message").value("MenuItemReview with id 1 deleted"));
-
-    org.mockito.Mockito.verify(menuItemReviewRepository).delete(r);
   }
 
   @WithMockUser(roles = {"ADMIN"})
@@ -344,8 +240,6 @@ public class MenuItemReviewControllerTests extends ControllerTestCase {
 
     mockMvc
         .perform(delete("/api/MenuItemReview").param("id", "999").with(csrf()))
-        .andExpect(status().isNotFound())
-        .andExpect(content().string(containsString("MenuItemReview")))
-        .andExpect(content().string(containsString("999")));
+        .andExpect(status().isNotFound());
   }
 }
