@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -21,8 +22,8 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = &quot;MenuItemReview&quot;)
 @RequestMapping(&quot;/api/MenuItemReview&quot;)
 @RestController
-<span class="fc" id="L24">@Slf4j</span>
-<span class="fc" id="L25">public class MenuItemReviewController extends ApiController {</span>
+<span class="fc" id="L25">@Slf4j</span>
+<span class="fc" id="L26">public class MenuItemReviewController extends ApiController {</span>
 
   @Autowired MenuItemReviewRepository menuItemReviewRepository;
 
@@ -31,7 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
   @PreAuthorize(&quot;hasRole('ROLE_USER')&quot;)
   @GetMapping(&quot;/all&quot;)
   public Iterable&lt;MenuItemReview&gt; allMenuItemReviews() {
-<span class="fc" id="L34">    return menuItemReviewRepository.findAll();</span>
+<span class="fc" id="L35">    return menuItemReviewRepository.findAll();</span>
   }
 
   /** Get a single MenuItemReview by id */
@@ -39,12 +40,12 @@ import org.springframework.web.bind.annotation.RestController;
   @PreAuthorize(&quot;hasRole('ROLE_USER')&quot;)
   @GetMapping(&quot;&quot;)
   public MenuItemReview getById(@Parameter(name = &quot;id&quot;) @RequestParam Long id) {
-<span class="fc" id="L42">    MenuItemReview review =</span>
+<span class="fc" id="L43">    MenuItemReview review =</span>
         menuItemReviewRepository
-<span class="fc" id="L44">            .findById(id)</span>
-<span class="fc" id="L45">            .orElseThrow(() -&gt; new EntityNotFoundException(MenuItemReview.class, id));</span>
+<span class="fc" id="L45">            .findById(id)</span>
+<span class="fc" id="L46">            .orElseThrow(() -&gt; new EntityNotFoundException(MenuItemReview.class, id));</span>
 
-<span class="fc" id="L47">    return review;</span>
+<span class="fc" id="L48">    return review;</span>
   }
 
   /** Create a new MenuItemReview */
@@ -57,13 +58,13 @@ import org.springframework.web.bind.annotation.RestController;
       @Parameter(name = &quot;stars&quot;) @RequestParam int stars,
       @Parameter(name = &quot;comments&quot;) @RequestParam String comments) {
 
-<span class="fc" id="L60">    MenuItemReview review = new MenuItemReview();</span>
-<span class="fc" id="L61">    review.setItemId(itemId);</span>
-<span class="fc" id="L62">    review.setReviewerEmail(reviewerEmail);</span>
-<span class="fc" id="L63">    review.setStars(stars);</span>
-<span class="fc" id="L64">    review.setComments(comments);</span>
+<span class="fc" id="L61">    MenuItemReview review = new MenuItemReview();</span>
+<span class="fc" id="L62">    review.setItemId(itemId);</span>
+<span class="fc" id="L63">    review.setReviewerEmail(reviewerEmail);</span>
+<span class="fc" id="L64">    review.setStars(stars);</span>
+<span class="fc" id="L65">    review.setComments(comments);</span>
 
-<span class="fc" id="L66">    return menuItemReviewRepository.save(review);</span>
+<span class="fc" id="L67">    return menuItemReviewRepository.save(review);</span>
   }
 
   /** Update a single MenuItemReview */
@@ -73,19 +74,33 @@ import org.springframework.web.bind.annotation.RestController;
   public MenuItemReview updateMenuItemReview(
       @Parameter(name = &quot;id&quot;) @RequestParam Long id, @RequestBody @Valid MenuItemReview incoming) {
 
-<span class="fc" id="L76">    MenuItemReview review =</span>
+<span class="fc" id="L77">    MenuItemReview review =</span>
         menuItemReviewRepository
-<span class="fc" id="L78">            .findById(id)</span>
-<span class="fc" id="L79">            .orElseThrow(() -&gt; new EntityNotFoundException(MenuItemReview.class, id));</span>
+<span class="fc" id="L79">            .findById(id)</span>
+<span class="fc" id="L80">            .orElseThrow(() -&gt; new EntityNotFoundException(MenuItemReview.class, id));</span>
 
-<span class="fc" id="L81">    review.setItemId(incoming.getItemId());</span>
-<span class="fc" id="L82">    review.setReviewerEmail(incoming.getReviewerEmail());</span>
-<span class="fc" id="L83">    review.setStars(incoming.getStars());</span>
-<span class="fc" id="L84">    review.setComments(incoming.getComments());</span>
+<span class="fc" id="L82">    review.setItemId(incoming.getItemId());</span>
+<span class="fc" id="L83">    review.setReviewerEmail(incoming.getReviewerEmail());</span>
+<span class="fc" id="L84">    review.setStars(incoming.getStars());</span>
+<span class="fc" id="L85">    review.setComments(incoming.getComments());</span>
 
-<span class="fc" id="L86">    menuItemReviewRepository.save(review);</span>
+<span class="fc" id="L87">    menuItemReviewRepository.save(review);</span>
 
-<span class="fc" id="L88">    return review;</span>
+<span class="fc" id="L89">    return review;</span>
+  }
+
+  /** Delete a MenuItemReview */
+  @Operation(summary = &quot;Delete a menu item review&quot;)
+  @PreAuthorize(&quot;hasRole('ROLE_ADMIN')&quot;)
+  @DeleteMapping(&quot;&quot;)
+  public Object deleteMenuItemReview(@Parameter(name = &quot;id&quot;) @RequestParam Long id) {
+<span class="fc" id="L97">    MenuItemReview review =</span>
+        menuItemReviewRepository
+<span class="fc" id="L99">            .findById(id)</span>
+<span class="fc" id="L100">            .orElseThrow(() -&gt; new EntityNotFoundException(MenuItemReview.class, id));</span>
+
+<span class="fc" id="L102">    menuItemReviewRepository.delete(review);</span>
+<span class="fc" id="L103">    return genericMessage(&quot;MenuItemReview with id %s deleted&quot;.formatted(id));</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
