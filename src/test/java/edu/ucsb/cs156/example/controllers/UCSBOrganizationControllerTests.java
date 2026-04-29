@@ -198,6 +198,32 @@ public class UCSBOrganizationControllerTests extends ControllerTestCase {
 
   @WithMockUser(roles = {"USER"})
   @Test
+  public void test_that_logged_in_user_can_get_by_orgCode_when_the_orgCode_exists()
+      throws Exception {
+    UCSBOrganization athletics =
+        UCSBOrganization.builder()
+            .orgCode("ATHLETICS")
+            .orgTranslationShort("Athletics")
+            .orgTranslation("Intercollegiate Athletics")
+            .inactive(true)
+            .build();
+
+    when(ucsbOrganizationRepository.findById("ATHLETICS")).thenReturn(Optional.of(athletics));
+
+    MvcResult response =
+        mockMvc
+            .perform(get("/api/UCSBOrganization").param("orgCode", "ATHLETICS"))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(ucsbOrganizationRepository, times(1)).findById("ATHLETICS");
+    String expectedJson = mapper.writeValueAsString(athletics);
+    String responseString = response.getResponse().getContentAsString();
+    assertEquals(expectedJson, responseString);
+  }
+
+  @WithMockUser(roles = {"USER"})
+  @Test
   public void test_that_logged_in_user_gets_404_when_the_id_does_not_exist() throws Exception {
     when(ucsbOrganizationRepository.findById("NOTREAL")).thenReturn(Optional.empty());
 
@@ -229,6 +255,31 @@ public class UCSBOrganizationControllerTests extends ControllerTestCase {
     MvcResult response =
         mockMvc
             .perform(delete("/api/UCSBOrganization").param("id", "ATHLETICS").with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(ucsbOrganizationRepository, times(1)).findById("ATHLETICS");
+    verify(ucsbOrganizationRepository, times(1)).delete(any());
+    Map<String, Object> json = responseToJson(response);
+    assertEquals("record ATHLETICS deleted", json.get("message"));
+  }
+
+  @WithMockUser(roles = {"ADMIN", "USER"})
+  @Test
+  public void admin_can_delete_an_existing_organization_by_orgCode() throws Exception {
+    UCSBOrganization athletics =
+        UCSBOrganization.builder()
+            .orgCode("ATHLETICS")
+            .orgTranslationShort("Athletics")
+            .orgTranslation("Intercollegiate Athletics")
+            .inactive(true)
+            .build();
+
+    when(ucsbOrganizationRepository.findById("ATHLETICS")).thenReturn(Optional.of(athletics));
+
+    MvcResult response =
+        mockMvc
+            .perform(delete("/api/UCSBOrganization").param("orgCode", "ATHLETICS").with(csrf()))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -292,6 +343,55 @@ public class UCSBOrganizationControllerTests extends ControllerTestCase {
             .perform(
                 put("/api/UCSBOrganization")
                     .param("id", "ATHLETICS")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(mapper.writeValueAsString(incoming))
+                    .with(csrf()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    verify(ucsbOrganizationRepository, times(1)).findById("ATHLETICS");
+    verify(ucsbOrganizationRepository, times(1)).save(expectedOrganization);
+    String expectedJson = mapper.writeValueAsString(expectedOrganization);
+    String responseString = response.getResponse().getContentAsString();
+    assertEquals(expectedJson, responseString);
+  }
+
+  @WithMockUser(roles = {"ADMIN", "USER"})
+  @Test
+  public void admin_can_update_an_existing_organization_by_orgCode() throws Exception {
+    UCSBOrganization existingOrganization =
+        UCSBOrganization.builder()
+            .orgCode("ATHLETICS")
+            .orgTranslationShort("Athletics")
+            .orgTranslation("Intercollegiate Athletics")
+            .inactive(true)
+            .build();
+
+    UCSBOrganization incoming =
+        UCSBOrganization.builder()
+            .orgCode("SHOULD_NOT_CHANGE")
+            .orgTranslationShort("Athletics Updated")
+            .orgTranslation("Updated Athletics")
+            .inactive(false)
+            .build();
+
+    UCSBOrganization expectedOrganization =
+        UCSBOrganization.builder()
+            .orgCode("ATHLETICS")
+            .orgTranslationShort("Athletics Updated")
+            .orgTranslation("Updated Athletics")
+            .inactive(false)
+            .build();
+
+    when(ucsbOrganizationRepository.findById("ATHLETICS"))
+        .thenReturn(Optional.of(existingOrganization));
+    when(ucsbOrganizationRepository.save(expectedOrganization)).thenReturn(expectedOrganization);
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                put("/api/UCSBOrganization")
+                    .param("orgCode", "ATHLETICS")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(mapper.writeValueAsString(incoming))
                     .with(csrf()))
