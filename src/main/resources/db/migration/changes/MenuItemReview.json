@@ -1,68 +1,74 @@
 {
-    "databaseChangeLog": [
-      {
-        "changeSet": {
-          "id": "MenuItemReview-1",
-          "author": "alexandrugherghescu01",
-          "preConditions": [
-            {
-              "onFail": "MARK_RAN"
-            },
-            {
-              "not": [
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "MenuItemReview-1",
+        "author": "alexandrugherghescu01",
+        "preConditions": [
+          {
+            "onFail": "MARK_RAN"
+          },
+          {
+            "not": [
+              {
+                "tableExists": {
+                  "tableName": "MENUITEMREVIEW"
+                }
+              }
+            ]
+          }
+        ],
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "MENUITEMREVIEW",
+              "columns": [
                 {
-                  "tableExists": {
-                    "tableName": "MENUITEMREVIEW"
+                  "column": {
+                    "name": "ID",
+                    "type": "BIGINT",
+                    "autoIncrement": true,
+                    "constraints": {
+                      "primaryKey": true,
+                      "primaryKeyName": "MENUITEMREVIEW_PK"
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "ITEM_ID",
+                    "type": "BIGINT"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "REVIEWER_EMAIL",
+                    "type": "VARCHAR(255)"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "STARS",
+                    "type": "INT"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "DATE_REVIEWED",
+                    "type": "TIMESTAMP"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "COMMENTS",
+                    "type": "VARCHAR(255)"
                   }
                 }
               ]
             }
-          ],
-          "changes": [
-            {
-              "createTable": {
-                "tableName": "MENUITEMREVIEW",
-                "columns": [
-                  {
-                    "column": {
-                      "name": "ID",
-                      "type": "BIGINT",
-                      "autoIncrement": true,
-                      "constraints": {
-                        "primaryKey": true,
-                        "primaryKeyName": "MENUITEMREVIEW_PK"
-                      }
-                    }
-                  },
-                  {
-                    "column": {
-                      "name": "ITEM_ID",
-                      "type": "VARCHAR(255)"
-                    }
-                  },
-                  {
-                    "column": {
-                      "name": "REVIEWER_EMAIL",
-                      "type": "VARCHAR(255)"
-                    }
-                  },
-                  {
-                    "column": {
-                      "name": "STARS",
-                      "type": "INT"
-                    }
-                  },
-                  {
-                    "column": {
-                      "name": "COMMENTS",
-                      "type": "VARCHAR(255)"
-                    }
-                  }
-                ]
-              }
-            }
-          ]
-        }
+          }
+        ]
       }
-    ]
-  }
+    }
+  ]
+}
